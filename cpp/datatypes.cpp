@@ -1,4 +1,6 @@
 #include <iostream>
+#include <climits>
+
 using namespace std;
 
 int main(){
@@ -30,14 +32,17 @@ int main(){
 
     /*
     Datatypes max/min values
-    char =>       -128 to 127 (255 unsigned)
-
-    short =>      -32768 to 32767 (65535 unsigned)
-    int =>        -2147483648 to 2147483647 (4294967295 unsigned) 
-    long long =>  -9223372036854775808 to 9223372036854775807 (18446744073709551615 unsigned)
+    char       -128 to 127 (255 unsigned)
+    short      -32768 to 32767 (65535 unsigned)
+    int        -2147483648 to 2147483647 (4294967295 unsigned) 
+    long long  -9223372036854775808 to 9223372036854775807 (18446744073709551615 unsigned)
     */
+
+    // Using constant values of limits.h/climits library
     cout<<"int overflow: \n";
-    cout<<"2147483647 + 1 = " <<2147483647 + 1<<"\n"; //-2147483648  - We will get a integer overflow warning msg. 
+    cout<<"2147483647 + 1 = " <<INT_MAX + 1<<"\n"; //-2147483648  - We will get a integer overflow warning msg. 
+
+    cout<<"----------------\n";
 
     return 0;
 }
