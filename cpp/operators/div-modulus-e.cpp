@@ -27,8 +27,8 @@ int main(){
     // reminder is 13-10 = 3. This number generates the fractional part
     int result3 = n - (n / m) * m;
 
-    cout<<"without %: "<<result3<<"\n";
-    cout<<"by using %: " <<n % m<< "\n";
+    cout<<"without %: "<<result3<<"\n";  // 3
+    cout<<"by using %: " <<n % m<< "\n"; // 3
 
     return 0;
 }
