@@ -20,14 +20,14 @@ int main(){
     cout<<"-------------\n";
 
     // program that reads 2 numbers and print the reminder without using % operator.
-	int n, m;
-	cin >> n >> m; // lets try 13/5
-	// 13/5 = 2  [2 complete units, each is 5]
-	// 2*5 = 10  [total complete units]
-	// reminder is 13-10 = 3. This number generates the fractional part
-	int result3 = n - (n / m) * m;
+    int n, m;
+    cin >> n >> m; // lets try 13/5
+    // 13/5 = 2  [2 complete units, each is 5]
+    // 2*5 = 10  [total complete units]
+    // reminder is 13-10 = 3. This number generates the fractional part
+    int result3 = n - (n / m) * m;
 
-	cout<<"without %: "<<result3<<"\n";
+    cout<<"without %: "<<result3<<"\n";
     cout<<"by using %: " <<n % m<< "\n";
 
     return 0;
