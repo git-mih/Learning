@@ -1,1 +1,4 @@
-# Learning
+# C
+# C++
+# Python
+# Discrete mathmatics
