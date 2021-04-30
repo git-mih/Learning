@@ -11,10 +11,9 @@ int main() {
     char ch;
     cin>>ch; //ch = Y    output: YYYY
 
-    int i = 0;
-    while(i < n){ // (0 < 4) (1 < 4) (2 < 4) (3 < 4) 
+    while(n > 0){ // (4>0) (3>0) (2>0) (1>0) 
         cout<<ch; // will print the character Y, 4x 
-        i++;
+        n--;
     }
 
     return 0;
