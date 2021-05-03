@@ -10,8 +10,8 @@ int main(){
 
     int i = 0;
     while(i < n){
-        if(i % 4 == 0 && i % 3 == 0){
-            cout<<i<<" ";
+        if(i % 4 == 0 && i % 3 == 0){ // i could also specify all together:
+            cout<<i<<" ";             // if(i % 8 == 0 || i % 4 == 0 && i % 3 == 0) cout<< i <<" ";
         } else if(i % 8 == 0){
             cout<<i<<" ";
         }
