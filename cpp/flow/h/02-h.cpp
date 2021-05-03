@@ -9,7 +9,7 @@ int main () {
 
     int n; // test case: 123
     cin >> n; 
-    int n_copy = n; // storing n no perform the inverse (R*3) later
+    int n_copy = n; // storing n to perform the inverse (R*3) later
 
     while (n) {  //    123    12    1
         int R = n % 10; // R=3 R=2 R=1
