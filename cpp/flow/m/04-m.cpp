@@ -6,8 +6,8 @@ int main(){
     // for each test case, read a integer N followed by reading N integers and then print the minimum value of the n integers
     // 1st try
     int T;  // test case: 2    im gonna read 2 test cases (6 3)
-    cin>>T; // 2   6 (10 50 30 20 70 4) output: 4
-            //     3 (10 5 30) output: 5
+    cin>>T; // 2   6 (10 50 30 20 70 4) output: 4 is the minimum value in this case
+            //     3 (10 5 30) output: 5 is the minimum
 
     int i = 1;
     while(i <= T){ // 1<=2  2<=2 and we will repeat all again 
@@ -24,7 +24,7 @@ int main(){
         }
         i++;
         cout<<"  "<<lower<<"\n"; // i = 1 output: 4
-                           // i = 2 output: 5
+                                 // i = 2 output: 5
     }
 
     return 0;

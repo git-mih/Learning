@@ -4,9 +4,6 @@ using namespace std;
 int main() {
     // diamond pattern
     // better version
-	int N;
-	cin >> N; //test case:  5
-
 	/*
 	  lets print the upper triangle first
 	  lets assume N = 4, how many spaces and starts we print
@@ -24,6 +21,9 @@ int main() {
 	  	print spaces
 	  	then print stars
 	 */
+	int N;
+	cin >> N; //test case:  5
+
 	int row = 1;
 	while (row <= N) { // row start being 1, then 2, then 3 and so on
 		int stars_count = 1;   // gonna use stars_count to print the spaces also

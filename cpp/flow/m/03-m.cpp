@@ -5,7 +5,8 @@ int main(){
     // program which read a integer n and print the first n numbers that are:
     // multiple of 3 but not multiple of 4
     // 1st try
-    int n = 11; // test case 11 (3 6 9 15 18 21 27 30 33 39 42)
+    int n; // test case: 11    output = (3 6 9 15 18 21 27 30 33 39 42)
+    cin >> n;
 
     int i = 0;
     while(i < n){ // (0 < 11) (1 < 12) (2 < 13) (3 < 14)
