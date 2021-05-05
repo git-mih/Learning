@@ -7,6 +7,7 @@ int main () {
     // eg:  input:  5    2 10 3 50 15  // output: 65 (from 50 + 15)
     //       read 5 int  a b  c d  e
     // 1st try
+
     int n, arr[200];
     cin >> n;
 
