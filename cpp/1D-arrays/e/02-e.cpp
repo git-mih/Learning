@@ -2,6 +2,14 @@
 using namespace std;
 
 int main () {
+    // program which read a integer n (n <= 200). then read n integers.
+    // print the array after doing the following operations:
+    // 		find the minimum number in the array
+	// 		find the maximum number in the array
+	// 		then replace each min number with the max number and vice versa.
+	// eg: 
+	//     input: 7   4  1  3  10  8  10  10       // 10 is the max and 1 is the min number
+	// 	   output:    4  10 3  1   8  1   1   
     int n, arr[200];
 
     int lower, higher;
