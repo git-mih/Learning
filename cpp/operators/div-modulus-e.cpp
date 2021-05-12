@@ -7,6 +7,7 @@ int main(){
     cout<<(a+b+c+d+e)/5<<"\n";
     cout<<(double)(a+b+c)/(double)(d+e)<<"\n"; //0.666667
     cout<<(double)((a+b+c)/3.0)/(double)((d+e)/2.0)<<"\n";//0.444444
+        // Type casting 
 
     cout<<"-------------\n";
 
