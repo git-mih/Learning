@@ -13,14 +13,6 @@ int main(){
     string phrase = "hello"; //Collection of characters data type
     bool is_married = true; //true or false = 1 or 0
 
-    //printing them
-    cout<<age<<"\n"; //10
-    cout<<pi<<"\n";    //3.14  - float has 7 decimal digits of precision
-    cout<<frac<<"\n";  //2.5   - double has 15 decimal digits of precision
-    cout<<letter<<"\n";  //A
-    cout<<phrase<<"\n";  //hello
-    cout<<is_married<<"\n"; // 1
-
     cout<<"----------\n";
 
     int a = 10;
