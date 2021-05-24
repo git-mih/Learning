@@ -7,8 +7,9 @@ def timer(fn):
         elapsed_total = 0
         elapsed_count = 0
 
-        for i in range(1): # calling the closure 10 times and getting the avarage time elapsed
-            # print('Running iteration {0}'.format(i))
+        # we have 10 hardcoded here
+        for i in range(10): # calling the closure 10 times and getting the avarage time elapsed
+            print('Running iteration {0}'.format(i))
             start_time = perf_counter()
             result = fn(*args, **kwargs) 
             end = perf_counter()
