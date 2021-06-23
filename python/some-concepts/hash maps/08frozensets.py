@@ -33,8 +33,8 @@ def memoizer(fn):
 	cache = {}
 	def wrapper(*args, **kwargs):                # this aproach, order of args would not matter
 		key = (*args, frozenset(kwargs.items())) # frozenset(args) | frozenset(kwargs.items())
-		print(cache)
-		print(key)
+		# print(cache)
+		# print(key)
 		if key in cache:
 			return cache[key]
 		else:
