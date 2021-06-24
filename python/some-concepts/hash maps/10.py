@@ -237,3 +237,59 @@ json.dumps(log, default=handler)
 #     "create_dt": "2021-06-24T17:48:35.500266"
 #   }
 # }
+
+#____________________________________________________________________________
+#						USING SINGLE DISPATCH
+
+from functools import singledispatch
+
+@singledispatch
+def handler(arg):
+	try:
+		return arg.toJSON()
+	except AttributeError:
+		try:
+			return vars(arg)
+		except TypeError:
+			return str(arg)
+
+@handler.register(datetime)   # if isinstance(arg, datetime) ...
+def _(arg):
+	return arg.isoformat()
+
+@handler.register(set)        # if isinstance(arg, set) ...
+def _(arg):
+	return list(arg)
+
+# we could also had registered Point and Person. But we are handling
+# with them inside the handler 
+
+# @handler.register(Person)
+# def _(arg):
+# 	return arg.toJSON()
+
+# @handler.register(Point)
+# def _(arg):
+# 	return vars(arg)
+
+log = {
+	'time': datetime.utcnow(),
+	'message': 'Created new point',
+	'point': pt1,
+	'created_by': p
+}
+
+json.dumps(log, default=handler)
+# {
+#   "time": "2021-06-24T19:19:14.156344",
+#   "message": "Created new point",
+#   "point": {
+#     "x": 1,
+#     "y": 2
+#   },
+#   "created_by": {
+#     "name": "fabio",
+#     "age": 26,
+#     "create_dt": "2021-06-24T19:19:14.152389"
+#   }
+# }
