@@ -3,7 +3,9 @@ import json
 from decimal import Decimal
 from datetime import datetime
 from fractions import Fraction
+
 # json.loads function parameters (parse_float, int, constant)
+
 j = '''
 {
 	"a": 100,
