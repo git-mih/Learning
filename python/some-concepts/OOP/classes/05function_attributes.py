@@ -31,23 +31,23 @@ my_obj.say_hello    # <bound method MyClass.say_hello of
 # MyClass.say_hello(my_obj)  TypeError: say_hello() takes 0 arguments but 1 was given
 
 # one advantage of this is that,
-# the say_hello function that we defined in the class, actually has a handle
-# to the object that it was bounded to. so now we can actually looks what is inside
-# that object namespace.
+# the say_hello function that we defined in the class, actually has a pointer
+# to the instance object that it was bounded to. so now we can actually looks 
+# what is inside that instance object namespace.
 
-
+#___________________________________________________________________________________
 # Methods are objects that combine: instance object of some class and function.
 # and like any object, it has attributes. 
 # Python automatically provides some attributes for us, 
-# in particular __self__ and __func__ attributes
-
-# __self__ is actually the object instance which the method is bound to.
-# __func__ is the original function that was defined in the class.
+# in particular __self__ and __func__ attributes:
+# __self__ is actually a pointer to the object instance which the method is bound to
+# __func__ is a pointer to the original function that was defined in the class.
 
 # whenever we call obj.method(args) it is basicly doing it:
 # method.__func__(method.__self__, args)
-#  original func  (object instance bounded   +    arguments)
-#                  injected as 1st parameter
+#  original func  (pointer to the bound object instance  +  arguments)
+#                      injected as 1st parameter
+
 
 class Person:
 	def hello(self): # self = p
@@ -126,12 +126,91 @@ my_obj.say_hello('fabio') # hello fabio! i am Perl
 # Python essentially did:
 MyClass.say_hello(my_obj, 'fabio') # hello fabio! i am Perl
 
+
 #____________________________________________________________________________________
+class Person:
+	def say_hello():
+		pass
+type(Person.say_hello) # function object
+
+p = Person()
+type(p.say_hello)      # method object
+
+# they both doesnt point to the same object
+type(p.say_hello) is type(Person.say_hello) # False 
+#____________________________________________________________________________________
+class Person:
+	def set_name(self, name): # self = p
+		self.name = name
+	  # setattr(self, 'name', name)
+
+p = Person()
+p.__dict__    # {}
+
+# setting attribute inside the object instance namespace
+p.set_name('fabio')
+p.__dict__    # {'name': 'fabio'}
+
+# essentially, python is doing it:
+Person.set_name(p, 'giu')
+p.__dict__    # {'name': 'giu'}
+
+#____________________________________________________________________________________
+class Person:
+	def say_hello(self):
+		pass
+
+p = Person()
+
+# class namespace
+Person.__dict__   # {'say_hello': <function __main__.Person.say_hello(self)>, ...}
+
+p.say_hello
+# <bound method Person.say_hello of <__main__.Person object at 0x000001491000FAF0>>
 
 
+# adding a new function in the class namespace
+Person.do_work = lambda self: f'do_work called from {self}' # self = p
 
+Person.__dict__   # {'say_hello': <function __main__.Person.say_hello(self)>,
+#                    'do_work'  : <function __main.<lambda>(self)>, ...}
 
+# we dont have to redefine the instance object after we add 'do_work' to Person class
+p.do_work
+# <bound method <lambda> of <__main__.Person object at 0x00000183AB4AFAF0>>
 
+p.do_work() # do_work called from <__main__.Person object at 0x0000028756E60AF0>
 
+#____________________________________________________________________________________
+# if we try to add the function directly in the object instance, that wont work the same.
 
+# what Python does is, when it finds a function defined at class level 
+# being called from an object instance, it basicly transforms that function into a
+# bound method.
+
+# but if it finds a function in the object instance itself, it wont happen.
+
+# Python is going to treat that function as a regular function attribute.
+class Person:
+	def f(self):
+		pass
+
+Person.__dict__  # {'f': <function __main__.Person.f(self)>, ...}
+
+p = Person()
+p.f     # <bound method Person.f of <__main__.Person object at 0x000001E863E5FAF0>>
+
+p.__dict__  # {}
+
+# defining a function inside the object instance namespace directly
+p.new_f = lambda *args: f'other_func called with {args}'
+
+p.new_f # <function <lambda> at 0x000001260A5DE9D0>
+# see, it will be treated as a regular function. Python wont transform it into a method.
+
+p.__dict__ # {'new_f': <function <lambda> at 0x000001260A5DE9D0>}
+# the new function was writed inside the object instance. and isnt a bound method anymore.
+
+p.new_f() # other_func called with ()
+# we see that doesnt receive any argument
 
