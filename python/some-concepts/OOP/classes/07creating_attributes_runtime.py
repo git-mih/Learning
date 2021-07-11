@@ -55,14 +55,82 @@ obj.say_hello() # hello Python!
 # have that method.
 
 #___________________________________________________________________________________________
+from types import MethodType
 
+class Person:
+	def __init__(self, name):
+		self.name = name
 
+p1 = Person('fabio')  # p1.__dict__   {'name': 'fabio'}
+p2 = Person('joel')   # p2.__dict__   {'name': 'joel'}
 
+# 
+p1.say_hello = MethodType(lambda self: f'{self.name} says hello', p2)
+# we are pointint to the instance object (p2). it is essentialy doing:
+# p1.say_hello(p2)
+# where self = p2  and  p2.name = 'joel'
 
+p1.say_hello() # joel says hello
+#___________________________________________________________________________________________
+class Person:
+	def __init__(self, name):
+		self.name = name
 
+	def register_do_work(self, fn):
+		# registring the method into the instance object
+		self.work = MethodType(fn, self) 
+		# math_teacher.work = MethodType(work_of_math, math_teacher)
 
+	def do_work(self):
+		# getting the work attribute in the object instance
+		do_work_method = getattr(self, 'work', None) # if not avaiable, set to None
 
+		if do_work_method: # if avaiable, call the method 
+			return do_work_method() # math_teacher.work()
+		else:              # if 'work' attribute not found, we should register one.
+			raise AttributeError('must first register a do_work method.')
 
+math_teacher = Person('Eric')
+english_teacher = Person('John')
 
+math_teacher.__dict__    # {'name': 'Eric'}
+english_teacher.__dict__ # {'name': 'John'}
 
+# math_teacher.do_work()   # AttributeError: must first register a work method
+# Eric doesnt have the: 'work': <bound method>  attribute.
 
+# function we gonna register as a method into the math_teacher namespace 
+def work_of_math(self):
+	return f'{self.name} will teach geometry today.'
+
+# calling the register function:  
+math_teacher.register_do_work(work_of_math)
+# Python essentially doing:
+Person.register_do_work(math_teacher, work_of_math)
+
+math_teacher.__dict__
+# {'name': 'Eric', 
+#  'work': <bound method work_of_math of <__main__.Person object at 0x000001FE3F1CFB80>>}
+
+# now we can call
+math_teacher.do_work()   # Eric will teach geometry today.
+
+#__________________________________________________________________________________________
+def work_of_english(self):
+	return f'{self.name} will analyze Hamlet today.'
+
+english_teacher.register_do_work(work_of_english)
+
+english_teacher.do_work() # John will analyze Hamlet today.
+
+# we are registring different functionalities by calling the same say. the plugins
+# are different but they are called the same way.
+teachers = [math_teacher, english_teacher]
+for t in teachers:
+	t.do_work()
+
+# Eric will teach geometry today.
+# John will analyze Hamlet today.
+
+# we could implement it with inheritence and metaclass concept. but this approach
+# is clean and simpler.
