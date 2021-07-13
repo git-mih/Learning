@@ -9,16 +9,26 @@ class C:
 	def __pow__(self, other): ...      # **
 	def __matmul__(self, other): ...   # @
 
-# when we try to perform some operation like, add:
-a = 4
-b = 2
-
-a + b         # 6
-# Python is essentyally calling the __add__ method.
-a.__add__(b)  # 6
+class Number:
+	def __init__(self, x):
+		self.x = x
+	
+	def __add__(self, other):
+		if isinstance(other, Number):
+			return self.x + other.x
+		return NotImplemented
 
 # To indicates the operation isnt suported, we implement the corresponding method
-# and return NotImplemented
+# and return NotImplemented.
+
+a = Number(3)
+b = Number(7)
+
+# when we try to perform the addition operation
+a + b         # 10
+
+# Python is essentyally calling the __add__ method.
+a.__add__(b)  # 10
 
 #___________________________________________________________________________________
 # Special methods: Reflected operators:
@@ -32,21 +42,37 @@ class C:
 	def __rpow__(self, other): ...     
 	def __rmatmul__(self, other): ...  
 
-# consider: 
-a = 2
-b = 4
+class Number:
+	def __init__(self, x):
+		self.x = x
+	
+	def __add__(self, other):
+		if isinstance(other, Number):
+			return self.x + other.x
+		return NotImplemented
 
-# when we try to perform some operation like, add:
-a + b  # 6
+	def __radd__(self, other):  # self = a, other = 7
+		return self.x + other   # self.x = 3 + 7 = 10
 
-# Python will attempt to call the __add__ method.
-a.__add__(b)  # 6
+a = Number(3) # type(a)  <class 'Number'>
 
+# 7 + a         # TypeError: unsupported operand type(s) for +: 'int' and 'Number'
+# 7.__add__(a)  # TypeError: unsupported operand type(s) for +: 'int' and 'Number'
 
-# if the __add__ returns NotImplemented and the operands are not of the same type,
-# Python will swap the operands and try this instead:
-b.__radd__(a) # 6
-		
+# once the 7.__add__(a) fails cause we cant add 'int' + 'Number'
+# Python will attempt to call the __radd__ method. swaping the operands like: 
+a.__radd__(7)  # 10
+
+# if we dont provide the reflected operator __radd__, we will get the same error:
+# a + 7         # TypeError: unsupported operand type(s) for +: 'Number' and 'int'
+# a.__radd__(7) # TypeError: unsupported operand type(s) for +: 'Number' and 'int'
+
+# but once we have implemented the __radd__ method, it will works properly:
+7 + a   # 10
+
+# at first, it will fail, then Python will try: 
+a.__radd__(7) # and it will works   # 10
+
 #___________________________________________________________________________________
 # Special Methods: in-place operators:
 class C:
@@ -105,3 +131,19 @@ class C:
 
 	def __abs__(self): ...      # abs(operand)
 	# used by the abs() builtin function.
+
+class Number:
+	def __init__(self, x):
+		self.x = x
+	
+	def __neg__(self):
+		return -self.x
+
+	def __abs__(self):
+		return abs(self.x)
+
+a = Number(3)
+
+-a      # -3
+abs(a)  #  3
+abs(-a) #  3
