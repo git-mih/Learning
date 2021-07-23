@@ -1,74 +1,16 @@
 # Using as instance properties
 
-# how we can use our data descriptor as object instance properties.
-
-# the question was, where are we going to store the attribute value?
-# we know the object instance we are dealing with in both __get__ and __set__ cause we pass
-# it in the `instance` argument. 
-
+# the question was, where are we going to store the attribute values?
 
 # cold we maybe store it in the object instance namespace? (dictionary)
 # in most of the cases, yes. that is the best and easiest approach. 
 
-# that will work most of the time, but we might get issues when dealing with __slots__. cause
-# we cant store anything we want cause there is no __dict__ anymore.
+# that will work most of the time, but we might get issues when dealing with slots. cause
+# we cant store anything we want, there is no __dict__ anymore when we implement __slots__.
 
 # and even if we were dealing with __dict__, what symbol should we use? 
-# we might overwrite an existing attribute as well...
+# we may overwrite an existing class attribute as well...
 
-
-# so, maybe we could use a dictionary thats local to the data descriptor object instance?
-# we are not going to use the instances data dictionary, we are going to use our own
-# dictionary inside the descriptor object instance. 
-
-# we might use the key to be the descriptor object instance essentially. but the problem is
-# if the descriptor object instance isnt hashable.
-# and we could set the value to be the attribute value that we want to store and whenever we
-# want to get it we just returns the value. and with the values, we can store anything we want,
-# doesnt have to be hashable objects. 
-
-# so, assuming our objects are hashables. we could do it this way:
-# we could create a dictionary in the descriptor object instance. 
-# e.g: in IntegerValue instance we create a dictionary.
-# now, if we use this IntegerValue object instance for multiple instances, they will share
-# the same descriptor object instance, the same dictionary.
-
-# when we use the __set__ method, we can save the value in the dictionary using the instance
-# as the key.
-# and then when we use the __get__, we can lookup the value based on the instance inside the
-# dictionary and then return the corresponing value.
-class IntegerValue:
-    def __init__(self):
-        # creating a empty dictionary in the object instances of this IntegerValue class.
-        self.data = {}
-
-    def __set__(self, instance, value):
-        # storing the value in the dictionary 'data' under the key 'instance'
-        self.data[instance] = int(value)
-
-    def __get__(self, instance, owner_class):
-        if not instance:
-            return self
-        # getting the value based on the key that is an object 'instance' inside the dictionary
-        return self.data.get(instance)
-        #      self.data['instance']
-
-class Point2D:
-    x = IntegerValue()
-    y = IntegerValue()
-    # this is going to work, but...
-
-p = Point2D() # reference count is 1 now
-
-p.x = 100     # p is now a key in self.data, we have a 2nd reference to that Point2D object instance
-
-# now if we try to delete p, it wont actually be destroyed. cause the dictionary of the
-# descriptor object instance has a strong reference to that Point2D object instance.
-del p
-
-# still have a reference count to that object. it wont be garbage collected.
-
-#_______________________________________________________________________________________________________
 class IntegerValue:
     def __set__(self, instance, value):
         instance.stored_value = int(value)
@@ -106,13 +48,16 @@ p1.y = 77      # p1.__dict__ {'stored_value': 77} seems to work, but...
 # now if we look at p.__dict__ again
 p1.__dict__    # {'stored_value': 77}
 
+
 # somehow we would need to have an distinct storage name for each property.
+
 #______________________________________________________________________________________________
-# we could do this, adding the __init__ and then create a new attribute inside the Descriptor
-# object instance namespace:
+# we could add the __init__ and then create a new attribute inside the Descriptor object 
+# instance namespace:
+
 class IntegerValue:
     def __init__(self, name):
-        self.storage_name = '_' + name   # Point2D.__dict__['x'].storage_name = '_x'
+        self.storage_name = '_' + name
 
     def __set__(self, instance, value):
         setattr(instance, self.storage_name, value)
@@ -122,23 +67,22 @@ class IntegerValue:
             return self
         return getattr(instance, self.storage_name, None)
 
-
 class Point2D:
-    # creates the descriptor object instances x and y first and then call the __init__ on it
     x = IntegerValue('x') # Point2D.__dict__['x'].__dict__   {} namespace before __init__()
+    # Python will create the descriptor object instances x and then call the __init__ on it:
     # IntegerValue.__init__(x, 'x')
-        # Point2d.__dict__['x'].storage_name = '_x'
+    # Point2D.x.storage_name = '_x'
 
+    # same to y:
     y = IntegerValue('y') # Point2D.__dict__['y'].__dict__   {} namespace before __init__()
     # IntegerValue.__init__(y, 'y')
-        # Point2d.y.storage_name = '_y'
+    # Point2d.y.storage_name = '_y'
 
-# it will creates the 'storage_name' attribute on each descriptor instances namespace. 
-
+# __init__ will creates the 'storage_name' property on each descriptor instances namespace. 
 
 # descriptor instances namespace after the __init__ call:
-Point2D.__dict__['x'].__dict__ # {'storage_name': '_x'}
-Point2D.y.__dict__             # {'storage_name': '_y'}
+Point2D.x.__dict__  # {'storage_name': '_x'}
+Point2D.y.__dict__  # {'storage_name': '_y'}
 
 
 p1 = Point2D()
@@ -147,13 +91,22 @@ p1.x = 10      # p1.__dict__ {'_x': 10}
 p1.y = 20      # p1.__dict__ {'_x': 10, '_y': 20}
 
 # essentially Python is doing it:
-IntegerValue.__set__(Point2D.__dict__['x'], p1, 10) # (self, instance, value) -> p1._x = 10
+IntegerValue.__set__(Point2D.x, p1, 10) # (self, instance, value)
+setattr(p1, Point2D.x.storage_name, 10)
+
 IntegerValue.__set__(Point2D.y, p1, 20)
+setattr(p1, Point2D.y.storage_name, 20)
+
 
 p2 = Point2D() 
 p2.__dict__    # {}
 p2.x = 100
+IntegerValue.__set__(Point2D.x, p2, 100)
+setattr(p2, Point2D.x.storage_name, 100)
+
 p2.y = 200     # p2.__dict__ {'_x': 100, '_y': 200}
+IntegerValue.__set__(Point2D.y, p2, 200)
+setattr(p2, Point2D.y.storage_name, 200)
 
 #________________________________________________________________________________________________
 # the approach above may works very well, but there is some drawbacks like, specifing the
@@ -161,40 +114,153 @@ p2.y = 200     # p2.__dict__ {'_x': 100, '_y': 200}
 
 # another drawback is that, we are assuming that, '_x' and '_y' are not already defined 
 # as class attribute in the Point2D class. 
-# we may already have it, and then overwrite then by setting a new '_x' or '_y' with __set__
+# we may already have it, and then overwrite then by setting a new '_x' or '_y' with __set__:
 p1 = Point2D()
 
 # creating a bare attribute '_x' inside the p1 namespace:
-p1._x = 10      # p1.__dict__ {'_x': 10}
+p1._x = 10
+p1.__dict__ # {'_x': 10}
 
 # __set__ method overwriting it:
-p1.x = 999      # pq.__dict__ {'_x': 999}
-
+p1.x = 999
+p1.__dict__ # {'_x': 999}
 
 # the last major point is that, what happen if we're using slots?  __dict__  will no longer
 # be avaiable to store 'storage_name' inside the object instances namespaces.
 
+
 #__________________________________________________________________________________________________
-# there is a different number of ways that we could fix it
+# maybe we could use a dictionary thats local to the data descriptor object instance?
 
-# lets assume that our class is using slots. and lets assume that the class is hashable.
+# we are not going to use the object instances dictionary anymore,
+# we can use the descriptor instances namespace (dictionary) to store the values for us.
 
-# So, what we might do instead of storing the value inside the object instance namespace, 
-# is basicly create an storage mechanism inside the Descriptor namespace itself.
+# so, assuming our objects are hashables. we could do it this way:
 
-# we have to be careful tho, because it have to be unique by instance
+# we could create a dictionary inside each descriptor object instance by using __init__.
+# and whenever we use the __set__ method, we can save the value inside the descriptor instance
+# dictionary by using the object instance as the key.
+
+# and when we use the __get__ we can lookup the value based on the object instance key 
+# we are using and then return the corresponing value.
+
 class IntegerValue:
     def __init__(self):
-        self.value = {}
+        # distinct dictionary for each descriptor instance.
+        self.stored_data = {}
 
     def __set__(self, instance, value):
-        setattr(instance, self.storage_name, value)
+        # using the object instance as key.
+        self.stored_data[instance] = int(value)
 
     def __get__(self, instance, owner_cass):
         if instance is None:
             return self
-        return getattr(instance, self.storage_name, None)
+        # accessing the a value based on the object instance
+        return self.stored_data[instance]
+
+class Point2D:
+    x = IntegerValue() # <__main__.IntegerValue object at 0x000001>  x.stored_data = {}
+    y = IntegerValue() # <__main__.IntegerValue object at 0x000002>  y.stored_data = {}
+
+# each descriptor instances will have its own dictionary called 'stored_data':
+Point2D.x.__dict__     # {'stored_data': {}}
+Point2D.y.__dict__     # {'stored_data': {}}
 
 
+# each of those descriptor instances will store value based on the object instances of the 
+# Point2D class:
+p1 = Point2D()         #  <__main__.Point2D object at 0x000003>
+
+p1.x = 10   
+# when we call the __set__ method, it will happen essentially:
+IntegerValue.__set__(Point2D.x, p1, 10)
+Point2D.x.stored_data[p1] = 10
+
+# p1 was added as key in 'stored_data' that is inside the descriptor instance (x) namespace:
+Point2D.x.stored_data # {<__main__.Point2D object at 0x000003>: 10}
+
+p1.y = 20
+IntegerValue.__set__(Point2D.x, p1, 10)
+Point2D.x.stored_data[p1] = 10
+
+# p1 was added inside the descriptor instance (y) namespace now:
+Point2D.y.stored_data # {<__main__.Point2D object at 0x000003>: 20}
 
 
+p2 = Point2D()  #  <__main__.Point2D object at 0x000004>
+p2.x = 999
+
+# now lets see the descriptor instance (x) namespace:
+Point2D.x.stored_data
+# {<__main__.Point2D object at 0x000003>: 10,     
+#  <__main__.Point2D object at 0x000004>: 999}
+
+# basicly the same descriptor instance was able to store inside itself, many values for 
+# multiple object instances just by using the object instances as key in the dictionary.
+
+
+# we can retrieve it based on the same key.
+p1.x  # 10
+# Python will call the __get__:
+IntegerValue.__get__(Point2D.x, p1, Point2D)
+Point2D.x.stored_data[p1] # 10
+
+p1.y  # 20
+IntegerValue.__get__(Point2D.y, p1, Point2D)
+Point2D.y.stored_data[p1] # 20
+
+p2.x  # 999
+IntegerValue.__get__(Point2D.x, p2, Point2D)
+Point2D.x.stored_data[p1] # 999
+
+#__________________________________________________________________________________________________
+# we can now store data that is basicly diferentiated by object instances, even though 
+# is the same descriptor instance.
+
+# we are no longer overwriting anything in the object instance dictionaries. 
+# and now we could potentialy deal with objects that uses slots, because we are not trying 
+# to store data inside the object instances namespace anymore. 
+# we are storing it inside descriptor instances namespace now.
+
+# everything that we need is to make the object instances being hashable objects to be able
+# to store then as keys inside the descriptor instance dictionary.
+
+
+# it seems to solve all problems, but not realy...
+# we actualy have a potential memory leak with this approach.
+# if we try to destroy p1, we gonna still have a reference to that p1 object inside the 
+# descriptor instance namespace.
+
+import ctypes
+def ref_count(address):
+    return ctypes.c_long.from_address(address).value
+
+# first we store the memory address of the object p1:
+id_p1 = id(p1)    # id_p1 = 0x000003
+
+'p1' in globals() # True
+ref_count(id_p1)  # 2
+
+# now we try to destroy p1 object:
+del p1
+
+'p1' in globals() # False 
+
+# we think it was actually destroyed but if we look at the reference count, we still have it
+ref_count(id_p1) # 1
+
+# now lets look at the descriptor instance namespace:
+Point2D.x.stored_data
+# {<__main__.Point2D object at 0x000003>: 10,  <<<<<<   still's there
+#  <__main__.Point2D object at 0x000004>: 999}    
+
+
+# we could get that object and assign to p1 again, like:
+p1 = list(Point2D.x.stored_data.keys())[0]
+
+p1   # <__main__.Point2D object at 0x000003>
+p1.x # 10
+
+
+# we could deal with it by using weak references.
