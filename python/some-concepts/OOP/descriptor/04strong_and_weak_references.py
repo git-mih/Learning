@@ -10,36 +10,42 @@ class Person:
 #______________________________________________________________________________________________
 # strong references:
 
-p1 = Person() # p1 = <__main__.Person object at 0x000001>
+p1 = Person()    # p1 = <__main__.Person object at 0x000001>
 # p1 is a reference to that Person object instance.
 
-print(ref_count(id(p1))) # 1
+id_p1 = id(p1)   # 0x000001
+ref_count(id_p1) # 1
 
-p2 = p1       # p2 = <__main__.Person object at 0x000001>
+p2 = p1          # p2 = <__main__.Person object at 0x000001>
 # p2 is also a referencee to that same Person object instance.
 
-p1 is p2      # True
-print(ref_count(id(p1))) # 2
+p1 is p2         # True
+ref_count(id_p1) # 2
 
-# they both are Strong references to that Person object instance.
+# they both are Strong references to that Person object instance at 0x000001.
+
 
 
 # now if we try to delete p1 or p2 reference (doesnt matter which one), 
 # the Person object instance wont be destroyed cause we still have a strong reference (p2) 
-# to that Person object instance.
+# to that Person object instance at 0x000001.
 del p2
 
-print(ref_count(id(p1))) # 1
-# the Person object is still there, so Python doesnt garbage collect it.
-
-
+ref_count(id_p1) # 1
+# Person object instance still there, Python doesnt garbage collect it.
 # Python wont garbage collect an object which reference count is not 0.
 
-# so now, if we delete p2, it wont have more strong references to that Person object. it will
-# then be destroyed by GC.
+# if we delete p1 as well, it wont have strong references to that Person object instance anymore.
+del p1
+ref_count(id_p1) # 0
+# the object instance at 0x000001 was garbage collected at this point now.
+
+ref_count(id_p1) # 23889287412394846 
+
 
 # that's the problem we faced in our data descriptor. we had a strong reference to the 
 # Point2D object instance inside the descriptor instance dictionary.
+
 
 #_______________________________________________________________________________________________
 # weak references:
@@ -47,63 +53,171 @@ print(ref_count(id(p1))) # 1
 # think of it as a reference to an object that does not affect the reference count as far as the
 # memory manager is concerned.
 
-# its a reference to the object but it doesnt count, doesnt increment the number of references
-# of the object.
 
-# we should have a strong reference pointing to some object first. 
-# and then we can have a weak reference thats point to that same object.
-# meaning that we can still get the object from the weak reference without affecting the 
-# reference counter of that object.
-# whenever we delete the strong reference, the reference count will be 0 cause the weak reference
-# doesnt affect it. and then the object is going to be destroyed by Python GC.
 
-# the weak reference will be considered "dead" after it. if we try to use it now, Python will
-# tell us that we cant, that object was gone.
+# first, we should have a strong reference to an object:
+p1 = Person()  # <__main__.Person object at 0x000001>
+id_p1 = id(p1) # 0x000001
 
-# so, for our data descriptor, instead of storing the object as key, we going to store a weak
-# reference to the object. it will take care of the memory leak we had with that approach.
-
-# use the weakref module
+# then we can make a weak reference to that same object:
 import weakref
-p1 = Person() # p1 has a strong reference to the object
-p2 = weakref.ref(p1) # p2 will be a weak reference to p1
-# NOTE: while ref() is running, we will have another strong reference to p1. but by the time
-# the ref() returns, that reference is gone.
 
-# also, p2 is now a callable. and if we call p2() it will then retursn the original object.
-# this is how we get to the object that p2 points to __weakref__. we just call p2(). then
-# Python go in and determine if that object still around or is gone. if stills there, it
-# returns the original object or it will return None if the object has been garbage collected.
+w1 = weakref.ref(p1) # type(w1) <class 'weakref'>
+# while ref() is running, we will have another strong reference to p1. 
+# but by the time the ref() returns, that reference is gone.
 
-# we should be careful, cause we can create another strong reference to an object by mistake
-# if we assign a reference to the p2(), like:
+ref_count(id_p1)     # 1
+# it references the object but doesnt increment the number of references of that object.
 
-p3 = p2()  
-p3  # <__main__.Person object at 0x000001>
-# we just created a strong reference to the object. now we would have to delete p1 and p3
-# to destroy the object.
+w1 # <weakref at 0x000002; to 'Person' at 0x000001>
+# it shows the weakref object instance and its pointing to that Person object instance.
+
+# we can see that w1 does not point to the same object as p1:
+w1 is p1  # False
 
 
-# dictionaries of weak references:
-# so, we will want to create a dictionary of weak references for our keys inside the data
-# descriptor.
+# we can also get the object that w1 is pointing to now. the weakref object instance 
+# is a callable, we just need to call it:
+w1()      # <__main__.Person object at 0x000001>
 
-# we could do that manually with regular dictionaries.
-# but instead, weakref has a WeakKeyDictionary to do just that for us.
+# Python checks if that object still around or not. if stills there, it returns the object.
+# but if the object has been garbage collected, returns None instead.
 
-p1 = Person()  # p1 is a strong reference to the Person object instance.
 
-d = weakref.WeakKeyDictionary() # <WeakKeyDictionary at 0x242fab29e50>
-d[p1] = 'some value'
+# we can create another strong reference to an object if we store that returned object:
+p2 = w1()        # p2 = <__main__.Person object at 0x000001>
+ref_count(id_p1) # 2
 
-next(d.items())   # (<__main__.Person object at 0x000001>, 'some value')
+# now we would have to delete p1 and p2 references to destroy the Person object.
+del p2
+ref_count(id_p1) # 1
 
-# and now if we delete p1, we will no longer have strong references. object will be GC:
+# weak references doesnt affect the number of reference counts.
+# so, whenever we delete the last strong reference of an object, the reference count 
+# will be 0. and once it happen, the object will be garbage collected:
+del p1
+ref_count(id_p1) # 0
+
+
+# weak reference will be considered "dead" now cause that object was garbage collected:
+w1    # <weakref at 0x000002; dead>
+
+# if we try to access that old Person object by calling the weakref instance:
+w1()  # None   it returns None.
+
+# we can use weak references to just track if a particular object still alives or not. cause
+# weak references will automatically be updated to show us that the object is no longer there.
+
+
+#_________________________________________________________________________________________________
+# most of the builtin types dont support weak references. 
+
+# if we try to create a weak reference to a list, dict, int, etc...
+l = [1, 2, 3]
+# weakref.ref(l)           # cannot create weak reference to 'list' object
+# weakref.ref({'age': 26}) # cannot create weak reference to 'dict' object
+# weakref.ref(123)         # cannot create weak reference to 'int'  object
+
+
+p1 = Person()     # <__main__.Person object at 0x000001>
+ref_count(id_p1)  # 1
+
+# the hole problem we had was, if we store p1 as a key in our dictionary we would increment 
+# the number of reference counts of that object. 
+
+# using the traditional dictionary would creates a strong reference to p1:
+data = {p1: 'Fabio'}
+
+ref_count(id_p1)   # 2    
+# we have both, p1 and data pointing to that Person object at 0x000001.
+
+del data
+ref_count(id_p1)   # 1
+
+
+# weakref provides a specialized kinda of dictionary that allow us to store weak references to 
+# objects that are ment to be keys inside the dictionary.
+
+# we first creates the dictionary and then whenever custom object we store as key, it will
+# automatically be added as weak reference to that particular object
+d = weakref.WeakKeyDictionary() # <WeakKeyDictionary at 0x19189bced30>
+
+d[p1] = 'Fabio'
+# the key inside our WeakKeyDictionary was made into a weak reference to that p1 object.
+
+# does not affect the reference count anymore:
+ref_count(id_p1)   # 1
+
+
+# we can see the number of weak references some object has by using the getweakrefcount():
+weakref.getweakrefcount(p1)  # 1
+
+# creating another weak reference to p1:
+d2 = weakref.WeakKeyDictionary()
+d2[p1] = 'Giu'
+
+weakref.getweakrefcount(p1)  # 2
+
+
+# somehow Python is tracking the number of weak references to a particular object. the way
+# Python stores this information its actually storing it in the object instance itself.
+
+# whenever we call the getweakrefcount(p1) it will go and look for __weakref__ property:
+p1.__weakref__  # <weakref at 0x000002; to 'Person' at 0x000001>
+# its a Double Linked List, we dont actually see all the other links (weak references),
+# we can see the first one that was created only.
+
+# we can easily see the weak references objects inside our WeakKeyDictionary:
+p1              # <__main__.Person object at 0x000001>
+d.keyrefs()     # [<weakref at 0x000002; to 'Person' at 0x000001>]
+
+
+# if we delete the last strong reference, the object will be garbage collected.
 del p1
 
-# the item will automatically be removed from the dictionary.
-# we are using weak references as key dictionary and once that weak reference goes "dead", 
-# Python will automatically removes that from the dictionary. that is cool.
+# and by the way weak references works, once that weak reference goes "dead", Python will 
+# automatically removes that entry from the WeakKeyDictionary:
+d.keyrefs()     # []
+
+
+# so, for our data descriptor, instead of storing the object as key, we should store a weak
+# reference to the object. it will take care of the memory leak we had with that approach.
+
+
+
+# as we saw early, most of the builtin types dont support weak references. so we can only
+# use keys in the WeakKeyDictionary that Python can creates weak references to.
+
+# we cant do it for exemple:
+d = weakref.WeakKeyDictionary()
+# d['Python'] = '3.7'   # TypeError: cannot create weak reference to 'str' object
+
+
+# our custom classes do support weak references. but the object must be hashable:
+class Person:
+    pass
+
+p = Person()   # hash(p) 138227236858
+
+# the Person object is hashable, so we can create weak references to it:
+d = weakref.WeakKeyDictionary()
+d[p] = 'Fabio'
+d.keyrefs()    # [<weakref at 0x000002; to 'Person' at 0x000001>]
+
+
+# lets implement the __eq__ and disable Python default hash functionality:
+class Person:
+    def __eq__(self):
+        pass
+
+p = Person()      # hash(p)  TypeError: unhashable type: 'Person'
+
+d = weakref.WeakKeyDictionary()
+# d[p] = 'Fabio'  # TypeError: unhashable type: 'Person'
+
+
+
+
 
 # should be careful. if we are iterating over the dictionary views cause the dictionary will
 # change size and the program may raise an exception.
