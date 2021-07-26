@@ -39,7 +39,7 @@ obj.hello       # <bound method MyClass.hello of <class '__main__.MyClass'>>
 # Static methods
 
 # we can define a function inside a class that will never be bound to 
-# any object when called. we require to use the @staticmethod.
+# any object when called. to do that, we require to use the @staticmethod.
 
 # these static methods will act like a regular function at class level and at
 # object instance level.
@@ -61,5 +61,3 @@ obj.help      # <function Circle.help at 0x000001A63B9AE670>   regular function
 # sometimes can be useful, it wrapps everything together inside the class.
 # even though we can import everything at module level, could be nice to import just
 # a class and this class came with regular functions bundled
-
-

@@ -3,8 +3,8 @@
 # if __eq__ method is implemented, __hash__ will be implicitly set to None unless we
 # have implemented the __hash__ manually.
 
-# by default when an override isnt specified like, we did not implemented the
-# __eq__ method. the __hash__ will uses the ID of the object to create the hash value.
+# by default when an override isnt specified like, when we did not implemented the
+# __eq__ method, the __hash__ will uses the ID of the object to create the hash value.
 
 # and by default, if we dont implement the __eq__ method, the __eq__ will uses
 # the identity comparasion (is) keyword. 
