@@ -1,6 +1,7 @@
 # Back to instance properties
 
 import ctypes
+from os import access
 
 def ref_count(address):
     return ctypes.c_long.from_address(address).value
@@ -206,7 +207,7 @@ del p
 # the _fn receives the weakref instance:  <weakref at 0x000002; dead>
 
 
-# if an object is garbage collected at some point, the corresponding entry wont be in the 
+# if an object is garbage collected at some point, the corresponding entry will not be in the 
 # descriptor instance dictionary anymore. the callback function _fn will removes that 
 # key entry (id) from the descriptor instance:
 Point.x.d # {}
@@ -218,8 +219,7 @@ Point.x.d # {}
 class Person:
     pass
 
-Person.__dict__ # {'__weakref__': <attribute '__weakref__' of 'Person' objects>, ...}
-print(Person.__weakref__)
+Person.__dict__ #   {'__weakref__': <attribute '__weakref__' of 'Person' objects>, ...}
 
 # the __weakref__ is technicaly a data descriptor:
 hasattr(Person.__weakref__, '__get__') # True
@@ -228,6 +228,7 @@ hasattr(Person.__weakref__, '__set__') # True
 # therefore, Person object instances will also have that property __weakref__:
 p = Person()  # <__main__.Person object at 0x000001>
 hasattr(p, '__weakref__') # True
+
 
 # we can look what is in there currently:
 p.__weakref__ # None
@@ -252,7 +253,8 @@ Person.__dict__
 #  'name'      : <member 'name' of 'Person' objects>, 
 #  '__doc__'   : None}
 
-# we are no longer able to create weak references now:
+
+# and we are no longer able to create weak references now:
 p = Person()
 hasattr(p, '__dict__')    # False
 hasattr(p, '__weakref__') # False
@@ -264,19 +266,93 @@ hasattr(p, '__weakref__') # False
 class Person:
     __slots__ = 'name', '__weakref__'
 
+p = Person()       # <__main__.Person object at 0x000001>
+
+# now we can create a weak reference to that Person object instance:
+w = weakref.ref(p) # <weakref at 0x000002; to 'Person' at 0x000001>
 
 
+# so if we want to use data descriptors by using weak references using our own regular
+# dictionaries or WeakKeyDictionary with classes that implement __slots__, we will need to
+# make sure to add __weakref__ to the slots.
 
+class ValidString:
+    def __init__(self, min_length=0, max_length=255):
+        self.data = {}
+        self._min_length = min_length
+        self._max_length = max_length
+    
+    def __set__(self, instance, value):
+        if not isinstance(value, str):
+            raise ValueError('Value must be a string.')
+        if len(value) < self._min_length:
+            raise ValueError(f'Value should be at least {self._min_length} characters.')
+        if len(value) > self._max_length:
+            raise ValueError(f'Value cant exceed {self._max_length} characters.')
+        # if value is valid, then we store it inside self.data dictionary:
+        self.data[id(instance)] = (weakref.ref(instance, self._fn), value)
 
+    def __get__(self, instance, owner_class):
+        if instance is None:
+            return self
+        value_tuple = self.data[id(instance)]
+        # getting the 2nd element of the tuple:
+        return value_tuple[1] 
 
+    def _fn(self, weak_ref):
+        dead_entry = [k for k, v in self.data.items() if v[0] is weak_ref]
+        if dead_entry:
+            key = dead_entry[0]
+            del self.data[key]
 
+class Person:
+    __slots__ = '__weakref__',
 
+    first_name = ValidString(1, 100)
+    last_name = ValidString(1, 100)
 
+    def __eq__(self, other):
+        return (
+            isinstance(other, Person) and
+            self.first_name == other.first_name and
+            self.last_name == other.last_name
+        )
 
+class BankAccount:
+    __slots__ = '__weakref__', 
 
+    account_number = ValidString(5, 255)
 
-# we dont want necessary to use the object instances itself to stores it. and in fact, if we
-# look at the porperty, it does not use the object instances, we cant see the values of the 
-# property inside the __dict__ of the object instances.
+    def __eq__(self, other):
+        return isinstance(other, BankAccount) and self.account_number == other.account_number
 
-#_________________________________________________________________________________________________
+p1, p2 = Person(), Person()
+p1.first_name, p1.last_name = 'Fabio', 'machado'
+p2.first_name, p2.last_name = 'Eric', 'idle'
+
+b1 = BankAccount()
+b1.account_number = 'Cheking...'
+
+p1.first_name, p1.last_name # Fabio machado
+p2.first_name, p2.last_name # Eric idle
+
+b1.account_number           # Cheking...
+
+Person.first_name.data
+# {2236011111111: (<weakref at 0x000001111; to 'Person' at 0x000001>, 'Fabio'), 
+#  2236022222222: (<weakref at 0x000002222; to 'Person' at 0x000002>, 'Eric')}
+
+Person.last_name.data
+# {2236011111111: (<weakref at 0x000003333; to 'Person' at 0x000001>, 'machado'), 
+#  2236022222222: (<weakref at 0x000004444; to 'Person' at 0x000002>, 'idle')}
+
+BankAccount.account_number.data
+# {2236033333333: (<weakref at 0x000005555; to 'BankAccount' at 0x000003>, 'Cheking...')}
+
+del p1
+del p2
+del b1
+
+Person.first_name.data          # {}
+Person.last_name.data           # {}
+BankAccount.account_number.data # {}
