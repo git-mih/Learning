@@ -1,147 +1,5 @@
 # Raising exceptions
 
-# to create that propagation workflow, we use the raise statement to raise an exception.
-
-# we cannot raise any custom class or object:
-from typing import Type
-
-
-class Person:
-    pass
-
-# raise Person      TypeError: exceptions must derive from BaseException
-
-
-# it have to be an object that inherits from BaseException class, the class itself doesnt have 
-# to be a direct sublcass.
-# raise ValueError()
-
-
-
-
-# BaseException
-# provides a __init__ that can handle an arbitrary number of positional arguments (*args).
-# when we create an instnace of an exception, we dont have to pass a single value. we can pass
-# as many values that we want while creating that instance. then we are able to recover it in
-# the exception instance by using the `args` attribute of the exception object instance. it is
-# also used in the str() and repr() representations that BaseException implements for us.
-
-# subclasses inherit this behavior.
-ex = ValueError('a', 'b', 'c')
-
-ex.args  # ('a', 'b', 'c')
-str(ex)  # ('a', 'b', 'c')
-repr(ex) # ValueError('a', 'b', 'c')
-
-# we are not limited by just a single error message, but in general that is what we do and we 
-# usually use the first argument as the custom error message.
-
-
-
-# re-raising current exception being handled:
-# when we are handling an exception, when we are inside the except clause, then we can re-raise
-# the current exception. and all we have to do is just use the raise statement. we dont pass
-# any specific object, Python knows that we want to take the current exception instance and
-# raise it.
-# we are basicly resuming the propagation workflow of that exception. as if we had not 
-# interrupted.
-# this is something really useful to things like bare exception handlers:
-try:
-    pass
-except:
-# we intercept that exception instance that raised, do something with that, and then we let
-# the exception propagates again. we re-raise that same exception by just using the raise:
-    raise
-
-
-
-# exception traceback:
-# as we saw with nested exceptions, we saw exception handlers that raise other exceptions.
-# the "final" exception traceback show us a history of this, if we look at the traceback from
-# the top level, we see everything that occurred.
-try:
-    raise ValueError()
-except ValueError:
-    try:
-        raise TypeError()
-    except TypeError:
-        """final"""
-        # raise KeyError()
-
-
-# Traceback (most recent call last):
-#   File "03raising.py", line 63, in <module>
-#     raise ValueError()
-# ValueError
-
-# During handling of the above exception, another exception occurred:
-
-# Traceback (most recent call last):
-#   File "03raising.py", line 66, in <module>
-#     raise TypeError()
-# TypeError
-
-# During handling of the above exception, another exception occurred:
-
-# Traceback (most recent call last):
-#   File "03raising.py", line 68, in <module>
-#     raise KeyError()
-# KeyError
-
-# sometimes this is too much information for our users, we dont want the user to be aware of
-# this TypeError exception that occurred for exemple.
-
-# our internal implementations should maybe remain opaque and we have a way to do that.
-
-# using raise... from...
-# when we do a raise from, we can control at some extent what traceback will be included:
-try:
-    raise ValueError()
-except ValueError:
-    try:
-        raise TypeError()
-    except TypeError:
-        pass
-        # raise KeyError() from None
-
-# Traceback (most recent call last):
-#   File "03raising.py", line 105, in <module>
-#     raise KeyError() from None
-# KeyError
-
-# if we follow this propagation workflow, technically we got the KeyError, TypeError, ValueError.
-# but the only thing the user is going to see in the traceback is the KeyError.
-
-# we can also decide that we want to raise from other exception:
-try:
-    raise ValueError()
-except ValueError:
-    try:
-        raise TypeError()
-    except TypeError:
-        pass
-        # raise KeyError() from ValueError()
-
-#   File "03raising.py", line 105, in <module>
-#     raise KeyError() from ValueError()
-# KeyError
-# PS C:\Users\pauloendoh\workspace\Learning\python\some-concepts\OOP\exceptions> py .\03raising.py
-# ValueError
-
-# The above exception was the direct cause of the following exception:
-
-# Traceback (most recent call last):
-#   File "03raising.py", line 122, in <module>
-#     raise KeyError() from ValueError()
-# KeyError
-
-# note that we are bypassing the TypeError. we are raising the KeyError directly from the 
-# ValueError exception.
-
-# it is useful to hide exception stacks that are just implementation details.
-
-#________________________________________________________________________________________________________________
-
 # exception workflows can be initiated by using the raise statement. 
 # in order to raise an exception we need to raise an instance of some exception type that 
 # inherits directly or indirectly from the BaseException.
@@ -154,33 +12,52 @@ try:
 except TypeError as ex:
     ex  # TypeError: exceptions must derive from BaseException
 
-# all the standart exceptions in Python derives from BaseException. 
-# BaseException allows any number of positional arguments (*args) in the initializer. the 
-# only place that we use these arguments is in the `args` attribute and the representations,
-# str() and repr().
+
+
+# all standart exceptions in Python derives from BaseException class.
+# BaseException initializer can receives any number of positional arguments. 
+# and these arguments keep stored inside the `args` attribute as a tuple value. 
+# we can also get these values by using str/repr representation functions:
 ex = BaseException('a', 'b', 'c')
 ex.args  # ('a', 'b', 'c')
 str(ex)  # ('a', 'b', 'c')
 repr(ex) # BaseException('a', 'b', 'c')
 
-# any other exception that inherits from BaseException also inherits these functionalities:
+# we often just use a single argument thats is usually some type of explanatory message. 
+# but the option of having extra arguments is very handy tho.
+
+# any other exception instance that inherits from BaseException will get these functionalities:
 ex = ValueError('a', 'b', 'c')
 ex.args  # ('a', 'b', 'c')
 str(ex)  # ('a', 'b', 'c')
 repr(ex) # BaseException('a', 'b', 'c')
 
-# often we just use a single argument which is usually some type of explanatory message. but is
-# also handy to have the option of extra arguments avaiable.
+
+#_____________________________________________________________________________________________________
+# there is some useful variations in the raise statement, like re-raising exceptions or raise 
+# different exceptions instead.
 
 
+# re-raising exceptions:
+# whenever we are handling an exception (inside the except clause essentially), we can 
+# re-raise the current exception. 
 
-# there is some useful variations in the raise statement. sometimes we want to catch an 
-# exception and try to handle it, and maybe because we either never planed to handle the 
-# exception, we just wanted to intercept the exception so we could do something with it. but we
-# really want that exception propagation to continue unhandled. or we do handle that specific 
-# exception and for some reason we need to re-raise that same exception, we need to continue
-# propagating that exception workflow as if we did not had handled the exception.
+# all we have to do is just use the raise statement without referencing any exception instance,
+# Python will raise the current exception that was beeing handled.
 
+# we are basicly resuming the propagation workflow of that exception. as if we had not 
+# interrupted that.
+
+# this is really useful to use with bare exception handlers:
+try:
+    pass
+except:
+    # intercept some exception instance that raised, do something with that. then we let the 
+    # exception propagates again. we re-raise that same exception instance.
+    raise
+
+
+# exemple with specific exception handler:
 try:
     1 / 0
 except ZeroDivisionError as ex:
@@ -194,13 +71,12 @@ except ZeroDivisionError as ex:
 #     1 / 0
 # ZeroDivisionError: division by zero
 
-# we got the logging, we essentially intercepted that ZeroDivisionError, but then we re-raise
-# that exception to let it propagates back as if we had not intercepted.
+# we essentially intercepted that ZeroDivisionError, "handled" that by simple logging, and 
+# then we re-raise that same exception to let it propagates back as if we had not intercepted.
 
-
-
-# sometimes we want to change a particular exception that we want to raise. this is useful for
-# when we want to use custom exceptions:
+#_____________________________________________________________________________________________________
+# we can trap a particular exception instance, and raise a different exception instead.
+# this is useful for when we want to use custom exceptions:
 class CustomError(Exception):
     """a custom exception"""
 try:
@@ -224,13 +100,15 @@ except ZeroDivisionError as ex:
 #     raise CustomError(*ex.args)
 # __main__.CustomError: division by zero
 
-# we get the CustomError raised, one very important thing to know is the traceback. 
-# notice that during the handling of the ZeroDivisionError exception, another exception occurred.
-# we raised CustomError.
 
+# its very useful to know how the traceback works, notice that during the handling of the 
+# ZeroDivisionError exception, another exception occurred.
 
+#_____________________________________________________________________________________________________
+# exception traceback:
 
-# we can have more levels of nesting as well:
+# with nested exceptions, we saw exception handlers that raise other exceptions.
+# if we look at the traceback from the top level, we see everything that occurred:
 try:
     raise ValueError('level 1')
 except ValueError:
@@ -259,9 +137,14 @@ except ValueError:
 #     raise KeyError('level 3')
 # KeyError: 'level 3'
 
+# sometimes this is too much information for our users, we dont want the user to be aware of
+# the ValuerError or TypeError exception that occurred before it for exemple.
 
 
+# our internal implementations should maybe remain opaque and we have a way to do that.
+# with `raise...from`, we can control at some extent what will be included in the traceback:
 
+# we can use `from None` to display only the last traceback object:
 try:
     raise ValueError('level 1')
 except ValueError:
@@ -276,9 +159,12 @@ except ValueError:
 #     raise KeyError('level 3')
 # KeyError: 'level 3'
 
+# if we follow the propagation workflow, we technically got the Key, Type and ValueError.
+# but the traceback will display only the last exception instance that raises.
 
 
-
+# we can also bypass some exceptions by jumping back to a specific exception instance in the 
+# traceback by using `from exception_instance`:
 try:
     raise ValueError('level 1')
 except ValueError as ex_1:
@@ -301,6 +187,4 @@ except ValueError as ex_1:
 # KeyError: 'level 3'
 
 
-
-
-
+# it is useful to hide exception stacks that are just implementation details.
