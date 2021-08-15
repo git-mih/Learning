@@ -79,3 +79,37 @@ class Account(metaclass=AutoClassAttrib, extra_args=(('account_type', 'savings')
 
 vars(Account)    # {..., 'account_type': 'savings', 'apr': 0.5}
 
+
+
+# passing the extra arguments inside a tuple is kinda tedious, we could use **kwargs instead:
+class AutoClassAttrib(type):
+    def __new__(mcls, name, bases, class_dict, **kwargs): # kwargs = {'acc': '01', 'apr': 0.6}
+        class_instance = super().__new__(mcls, name, bases, class_dict)
+        if kwargs:
+            for k, v in kwargs.items():  # dict_items([('acc', '01'), ('apr', 0.6)])
+                setattr(class_instance, k, v)
+        return class_instance
+        
+# now we can pass our extra attributes this way:
+class Account(metaclass=AutoClassAttrib, acc='01', apr=0.6):
+    pass
+
+Account.__dict__  #  {..., 'acc': '01', 'apr': 0.6}
+
+
+# or we could just update the class namespace (dictionary) with the dictionary that we passed 
+# to the metaclass in extra arguments:
+class AutoClassAttrib(type):
+    def __new__(mcls, name, bases, class_dict, **extra_args):
+        print(extra_args)
+        class_dict.update(extra_args) 
+        class_instance = super().__new__(mcls, name, bases, class_dict)
+        return class_instance
+        
+class Person(metaclass=AutoClassAttrib, first_name='Fabio', age=26, city='POA'):
+    pass
+
+# we gonna update the class namespace (class_dict) with this extra_args dictionary:
+# extra_args = {'first_name': 'Fabio', 'age': 26, 'city': 'POA'}
+
+Person.__dict__   # {..., 'first_name': 'Fabio', 'age': 26, 'city': 'POA', ...}
