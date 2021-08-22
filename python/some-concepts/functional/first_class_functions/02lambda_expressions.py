@@ -1,23 +1,25 @@
 # Lambda expressions
 
-# we can create functions using the `def` statement. but lambda expressions are another way of 
-# creating function objects as well.
+# we can create functions objects using the `def` statement. but lambda expressions are another 
+# way of creating function objects as well.
 
 # syntax:  
 # lambda [parameter_list]: return_value [, argument_list] -> function object
 
-# parameters are optinal but the `:` is required. the `return_value` is evaluated and returned 
-# when the lambda function object gets called. we can think of it as the "body" of the function.
+# parameters are optinal but the `:` is required. 
+# the `return_value` will be executed and return its value only when the lambda function object 
+# gets called. we can think of it as the "body" of the function. 
+
 # the lambda expression itself returns a function object.
 
 
-# when Python execute that `lambda` keyword, it is not actually evaluating the expression.
-# just like when the `def` keyword gets compiled, it is actually creating the function object, 
-# same with lambda expressions.
+# when Python execute that `lambda` keyword, it is not actually executing its "body" scope.
+# just like when the `def` keyword gets compiled, it is actually creating the function object.
+# and is the same with lambda expressions, it just creates that function object in memory.
 
 
 # whenever we use `def`, it require us to define a symbol to reference that function object. 
-# but lambda expressions do not, they are just a function object that exist in memory and doesnt
+# lambda expressions doesnt. they are just a function object that exist in memory and doesnt
 # get assigned to a symbol:
 type(lambda x: 'python')  # <class 'function'>
 
@@ -28,14 +30,14 @@ type(lambda s: s[::-1])   # <class 'function'>
 
 # note that, all these expressions are function objects, but they are not "named", thats why they
 # are also called anonymous functions. 
-# they are essentially just function objects, just like the one that we create using `def`.
+# they are essentially just function objects, just like the one that gets created using `def`.
 
 
 # whenever Python loads the module and compile that lambda expression, it will create a new 
 # function object in memory. but they dont get assigned to a symbol by default, but we can:
 f = lambda: 'python'    # <function <lambda> at 0x000001>
 
-# still being a function object, but having a reference to that object in memory now:
+# still being a function object, but having a reference to that function object in memory now:
 type(f)  # <class 'function'>
 
 # we can call it by using its reference:
@@ -76,7 +78,8 @@ f = lambda *args, **kwargs: f'args={args}, kwargs={kwargs}'
 f(1, 2, 3, key1='dark', key2='magician') 
 # args=(1, 2, 3), kwargs={'key1': 'dark', 'key2': 'magician'}
 
-#______________________________________________________________________________________________________
+
+
 # flow of lambdas:
 def f(fn, *args, **kwargs):
     # args   = (1, 2)
@@ -90,7 +93,8 @@ def f(fn, *args, **kwargs):
     return fn(*args, **kwargs) # fn(1, 2, key1='dark') -> 'YEAH'
 
 f(lambda a, b, key1: 'YEAH', 1, 2, key1='dark') # YEAH
-# notice that, the arguments are specified after the return value.
+# notice that, the arguments itself are specified after the return value.
+
 
 # another exemples:
 f(lambda x, y: x-y, 7, 2)      # 5
@@ -105,4 +109,56 @@ f(sum, (1, 2, 3, 4, 5)) # 15  sum(1, 2, 3, 4, 5) is being called essentially.
 
 
 # an important note is that, lambdas are not equivalent to closures. they are regular functions
-# essentially, but lambdas can be used as closures as well.
+# essentially. but lambdas can be used as closures as well.
+
+
+#______________________________________________________________________________________________________
+# lambdas and sorting:
+
+# Python has a function called `sorted` that will takes an iterable, and return a list 
+# containing all items from that iterable in ascending order (by default). 
+# so we can supply list, dictionary, tuple, strings, etc.
+
+l = [1, 5, 3, 10, 9, 6] # 0x000001
+
+# we can sort that list object by using `sorted()`, but is important to know that, it will not 
+# do an in-place ordering. meaning that, it will not sort the list object 0x000001 but return a 
+# new sorted list object:
+sorted(l) # [1, 3, 5, 6, 9, 10]
+l         # [1, 5, 3, 10, 9, 6]
+
+
+
+# the sorted function works pretty well, but take a look at this:
+sorted(['c', 'B', 'D', 'a']) # ['B', 'D', 'a', 'c']
+
+# sorting strings will be based on the ASCII code table:
+ord('A') # 65  capital letters will precede lower case letters. 
+ord('a') # 97  that is why the they came first. 
+
+
+
+# a custom key function can be supplied to customize the sort order of `sorted`:
+#   sorted(iterable [,key=fn]) -> list
+
+# it is used to change the way in which elements will be ordered, it does that by 
+# calling a function to each element of the iterable, and threi return value will be sorted.
+
+# for every element in the iterable, we can associate another element to sort, that element 
+# could be the upper case version of each element for exemple:
+sorted(['c', 'B', 'D','a'], key=lambda e: e.upper()) # ['a', 'B', 'c', 'D']
+
+
+# another exemple:
+d = {'def': 200, 'abc': 300, 'ghi': 100}
+
+# if we sort that dictionary, it will iterate only over the keys essentially:
+sorted(d) # ['abc', 'def', 'ghi']
+
+# but we can sort that dictionary based on its values and not in the keys:
+sorted(d, key=lambda e: d[e]) # ['ghi', 'def', 'abc']
+# d['def'] = 200  //  d['abc'] = 300 //  d['ghi' = 100] essentially.
+
+
+# we are sorting elements by associating a function call that give us an specified order for 
+# each element of that iterable, we can order things the way that we want.
