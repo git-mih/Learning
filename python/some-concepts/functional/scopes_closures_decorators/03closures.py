@@ -341,6 +341,34 @@ l[1]() # 2
 l[2]() # 2
 
 
+
+# what we could do instead, is capture the outer variable value when the function object gets 
+# created. we cant wait to get that value only when the function gets evaluated.
+l = []
+for n in range(3):
+    l.append(lambda i=n: i)
+# we are setting a default value for `i` essentially. it means that, whenever that function
+# object gets created, that variable name `i` will be pre-assigned with the current value 
+# that the outer variable `n` is pointing to.
+
+# in this case, we are not even creating closures, we are just creating regular functions:
+l # [<function <lambda> at 0x1>, <function <lambda> at 0x2>, <function <lambda> at 0x3>]
+
+# the value of `i` was pre-defined during that function object creation, it wont wait till
+# we call the function to get that value anymore:
+l[0].__defaults__ # (0,)
+l[1].__defaults__ # (1,)
+l[2].__defaults__ # (2,)
+
+# we just call them, the value was defined during the function object creation:
+l[0]()  # 0
+l[1]()  # 1
+l[2]()  # 2
+
+# we can also override that pre-assigned default value:
+l[0](i=5) # 5
+
+
 #___________________________________________________________________________________________________
 # nested closures:
 
