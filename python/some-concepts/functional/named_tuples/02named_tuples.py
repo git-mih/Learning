@@ -182,5 +182,139 @@ Person = namedtuple('Person', 'first_name age city')
 
 Person('Fabio', 26, 'POA')._asdict()  # {'first_name': 'Fabio', 'age': 26, 'city': 'POA'}
 
-
 # we can also perform the reverse proccess.
+
+
+#________________________________________________________________________________________________
+# modifying values of namedtuples:
+
+# namedtuples are immutable objects, it means that, whenever we try to modify/extend it, it
+# will create a new namedtuple object essentially.
+Person = namedtuple('Person', 'name age')
+p = Person('Fabio', 26)  # Person(name='Fabio', age=26)   0x000001
+
+# later on we decide to "change" one or more values inside that tuple:
+p = Person(p.name, 777)  # Person(name='Fabio', age=777)  0x000005
+
+# we are essentially creating a new Person object instance and that variable name `p` is
+# referencing that new object now.
+
+
+# this simple approach works well, but it has a drawback that, what if we have a large tuple:
+Person = namedtuple('Person', 'first last age country city height role')
+p = Person('Fabio', 'machado', 26, 'Brazil', 'POA', 1.79, 'Enginner')
+
+# suppose that we only want to change the `city` field:
+p = Person(p.first, p.last, p.age, p.country, 'Gramado', p.height, p.role)
+# Person(first='Fabio', last='machado', age=26, country='Brazil', city='Gramado', height=1.79, role='Enginner')
+
+# that works, but its a painful to write that...
+
+
+# maybe we could use slicing:
+p = Person('Fabio', 'machado', 26, 'Brazil', 'POA', 1.79, 'Enginner')
+first_values = p[:4]  # ('Fabio', 'machado', 26, 'Brazil')
+last_values = p[5:]   # (1.79, 'Enginner')
+
+p = Person(*first_values, 'Gramado', *last_values)
+# Person(first='Fabio', last='machado', age=26, country='Brazil', city='Gramado', height=1.79, role='Enginner')
+
+# or unpacking:
+p = Person('Fabio', 'machado', 26, 'Brazil', 'POA', 1.79, 'Enginner')
+*values, _, heigth, role = p
+
+args = values + ['Gramado', heigth, role] # ['Fabio', 'machado', 26, 'Brazil', 'Gramado', 1.79, 'Enginner']
+
+p = Person(*args)
+# Person(first='Fabio', last='machado', age=26, country='Brazil', city='Gramado', height=1.79, role='Enginner')
+
+
+
+# the _replace instance method:
+
+# namedtuples provides this handy method that allow us to copy an namedtuple object into a new 
+# namedtuple object where we can replace the values that we want to.
+# for that, we require to provide keyword arguments which will represent the corresponding
+# field names of the tuple and its respective values.
+
+# suppose that we want to change the `country`, `city` and `role` now:
+p = Person('Fabio', 'machado', 26, 'Brazil', 'POA', 1.79, 'Enginner')
+p._replace # <bound method Person._replace of Person(...)>
+
+# is important to know that, the keyword name must match an existing field name:
+p = p._replace(country='UK', city='London', role='DevOps')
+# Person(first='Fabio', last='machado', age=26, country='UK', city='London', height=1.79, role='DevOps')
+
+#_______________________________________________________________________________________________________________
+# extending a namedtuple:
+
+# sometimes we want to create a namedtuple that can extends another namedtuples by appending
+# one or more fields, like:
+Person = namedtuple('Person', 'first last age country city height role') # 0x01
+Person = namedtuple('Person', 'first last age country city height role car model') # 0x02
+
+# we could use the _fields propertie instead:
+Person = namedtuple('Person', 'first last age country city height role') # 0x01
+fields = Person._fields + ('car', 'model')
+
+Person = namedtuple('Person', fields)
+Person._fields # ('first', 'last', 'age', 'country', 'city', 'height', 'role', 'car', 'model')
+
+
+# we can also easily use an existing object instance to create a new with object instance with
+# the new field name that was created:
+Person = namedtuple('Person', 'first last age country city height role')
+p = Person('Fabio', 'machado', 26, 'Brazil', 'POA', 1.79, 'Enginner')
+
+# later on we decide to extend the Person tuple fields:
+Person = namedtuple('Person', Person._fields + ('car', 'model'))
+
+# we can update that Person instance `p`, with the new values by unpacking the old tuple
+# into a new Person instance + new fields:
+p = Person(*p, 'Hyundai', 'Hb20')
+# Person(first='Fabio', last='machado', age=26, country='Brazil', city='POA', height=1.79, 
+#        role='Enginner', car='Hyundai', model='Hb20')
+
+
+#_______________________________________________________________________________________________________________
+# default values for namedtuples:
+
+# namedtuple class object doesnt provide a way to define default values. 
+# for that, we could create an object instance of the namedtuple with default values, we are
+# essentially creating a prototype.
+
+Person = namedtuple('Person', 'first last age country city height role')
+proto_person = Person(None, None, None, 'Brazil', 'POA', None, 'N/A')
+# Person(first=None, last=None, age=None, country='Brazil', city='POA', height=None, role='N/A')
+
+# after we define default values for that prototype, we can create object instances of that 
+# prototype class object using the _replace method:
+fabio = proto_person._replace(first='Fabio', last='machado', age=26)
+# Person(first='Fabio', last='machado', age=26, country='Brazil', city='POA', height=None, role='N/A')
+
+giu = proto_person._replace(first='Giulianna', last='Sonnenstrahl', city='NH')
+# Person(first='Giulianna', last='Sonnenstrahl', age=None, country='Brazil', city='NH', height=None, role='N/A')
+
+# the only thing is that, we now require to use keyword arguments with this approach.
+
+
+
+# we can also provide default values by hardcoding values inside the __defaults__ attribute
+# that is avaiable inside the namedtuple class constructor:
+Person = namedtuple('Person', 'first last age country city height role')
+
+# hardcoding default values:
+Person.__new__.__defaults__ = ('Brazil', 'POA', None, 'N/A')
+
+# is important to know that, the __defaults__ store that into a tuple based on their positions:
+def f(a, b, c=20, d=30, e=40): pass
+f.__defaults__  # (20, 30, 40)
+
+
+fabio = Person('Fabio', 'machado', 26, height=1.79)
+# Person(first='Fabio', last='machado', age=26, country='Brazil', city='POA', height=1.79, role='N/A')
+
+giu = Person('Giulianna', 'Sonnenstrahl', 24)
+# Person(first='Giulianna', last='Sonnenstrahl', age=24, country='Brazil', city='POA', height=None, role='N/A')
+
+# by using this approach, we are no longer required to use keyword-only arguments.
