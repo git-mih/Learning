@@ -425,3 +425,55 @@ globals()   # {..., 'module1': <module 'module1' from 'C:\\users\\username\\modu
 
 # with that module object reference, we can use its attributes:
 module1.city    # Porto alegre
+
+#___________________________________________________________________________________________________
+# import variants:
+
+# the module get loaded inside the system cache, no matter the way that we are going to import.
+# the only thing that really change is what symbol will be added inside our global namespace, 
+# and its reference. 
+# the reference can be either to the module object itself or just some attribute of that module 
+# object, for exemple, a function object.
+
+
+# regular import:
+import math
+
+math = sys.modules['math'] # math loaded in system cache
+
+# global namespace:
+globals()  # {..., 'math': <module 'math' (built-in)>}
+
+
+# import..as:
+import math as xyz
+xyz = sys.modules['math'] # math loaded in system cache
+
+# global namespace:
+globals()  # {..., 'xyz':  <module 'math' (built-in)>}
+
+
+# from..import:
+from math import sqrt
+sqrt = sys.modules['math'].__dict__['sqrt'] # math loaded in system cache
+
+# global namespace:
+globals()  # {..., 'sqrt': <built-in function sqrt>}
+
+
+# from..import..as:
+from math import sqrt
+xyz = sys.modules['math'].__dict__['sqrt'] # math loaded in system cache
+
+# global namespace:
+globals()  # {..., 'xyz': <built-in function sqrt>}
+
+
+# from..import..*:
+from math import * # math loaded in system cache
+
+# global namespace:
+globals()  # {..., 'sqrt': <built-in function sqrt>, 'pi': 3.141592, ...}
+
+# will essentially import everything that was defined inside the __all__ list. 
+# it creates a symbol inside our global namespace for each element that is inside that __all__.
