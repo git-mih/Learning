@@ -1,0 +1,129 @@
+# Open Python console and play with the imports:
+_______________________________________________________________________________________________________________
+# importing a single module: 
+
+>>> import module1
+executing module1...
+
+>>> globals()
+{...,
+  'module1': <module 'module1' from '...packages\\module1.py'>
+}
+
+>>> module1.value
+10
+
+>>> module1.__path__  --> AttributeError: has no attrib.
+
+_______________________________________________________________________________________________________________
+# importing a package:
+
+>>> import pack1
+executing pack1...
+
+>>> globals()
+{...,
+  'pack1': <module 'pack1' from '...packages\\pack1\\__init__.py'>
+}
+
+>>> pack1.value
+20
+
+>>> type(pack1)
+<class 'module'>
+
+_______________________________________________________________________________________________________________
+# importing sub-package:
+
+>>> import pack1.sub_pack1
+executing pack1...
+executing sub_pack1...
+
+>>> globals()
+{...,
+  'pack1': <module 'pack1' from '...packages\\pack1\\__init__.py'>
+}
+
+
+>>> sys.modules
+{...,
+  'pack1':           <module 'pack1' from '...packages\\pack1\\__init__.py'>, 
+  'pack1.sub_pack1': <module 'pack1.sub_pack1' from '...packages\\pack1\\sub_pack1\\__init__.py'>
+}
+
+
+_______________________________________________________________________________________________________________
+# importing a sub-package module:
+
+>>> import pack1.sub_pack1.module2
+executing pack1...
+executing sub_pack1...
+executing module2...
+
+>>> globals()
+{..., 
+  'pack1': <module 'pack1' from '...packages\\pack1\\__init__.py'>
+}
+
+
+>>> sys.modules
+{...,
+  'pack1':                   <module 'pack1' from '..packages\\pack1\\__init__.py'>,
+  'pack1.sub_pack1':         <module 'pack1.sub_pack1' from '..packages\\pack1\\sub_pack1\\__init__.py'>, 
+  'pack1.sub_pack1.module2': <module 'pack1.sub_pack1.module2' from '..packages\\pack1\\sub_pack1\\module2.py'>
+}
+
+>>> pack1.sub_pack1.module2.value
+777
+
+
+_______________________________________________________________________________________________________________
+# importing a package that itself import modules:
+
+>>> import pack2
+executing pack2... and importing modules 3 and 4
+executing module3...
+executing module4...
+
+>>> globals()
+{...,
+  'pack2': <module 'pack2' from '...packages\\pack2\\__init__.py'>
+}
+
+
+>>> sys.modules
+{...,
+  'pack2.module3': <module 'pack2.module3' from '...packages\\pack2\\module3.py'>, 
+  'pack2.module4': <module 'pack2.module4' from '...packages\\pack2\\module4.py'>,
+  'pack2': <module 'pack2' from '...packages\\pack2\\__init__.py'>
+}
+_______________________________________________________________________________________________________________
+# importing all modules that are inside of a package:
+
+>>> from pack2 import *
+executing pack2... and importing modules 3 and 4
+executing module3...
+executing module4...
+
+# from..import adds references to module3 and module4 inside our global namespace as well.
+
+>>> globals()
+{...,
+  'pack2':   <module 'pack2' from '...packages\\pack2\\__init__.py'>, 
+  'module3': <module 'pack2.module3' from '...packages\\pack2\\module3.py'>, 
+  'module4': <module 'pack2.module4' from '...packages\\pack2\\module4.py'>
+}
+
+>>> module3.add(5, 5)
+10
+
+>>> module3.sub(10, 3)
+7
+
+
+>>> sys.modules
+{...,
+  'pack2': <module 'pack2' from '...packages\\pack2\\__init__.py'>,
+  'pack2.module3': <module 'pack2.module3' from '...packages\\pack2\\module3.py'>, 
+  'pack2.module4': <module 'pack2.module4' from '...packages\\pack2\\module4.py'>
+}

@@ -1,5 +1,3 @@
-# module1.py
-
 print(f'--------------- Running: {__name__} ---------------')
 
 def func(file_name, namespace):
@@ -11,24 +9,6 @@ def func(file_name, namespace):
 func('module1 namespace', globals())
 
 print(f'--------------- End of: {__name__} ---------------')
-
-# output:
-# --------------- Running: __main__ ---------------
-
-#       ---------- module1 namespace ----------
-# __name__: __main__
-# __doc__: None
-# __package__: None
-# __loader__: <_frozen_importlib_external.SourceFileLoader object at 0x000002>
-# __spec__: None
-# __annotations__: {}
-# __builtins__: <module 'builtins' (built-in)>
-# __file__: module1.py
-# __cached__: None
-# func: <function func at 0x000001>
-#        -------------------------------------
-
-# --------------- End of: __main__ ----------------
 
 
 #_________________________________________________________________________________________________
@@ -50,3 +30,23 @@ print(f'--------------- End of: {__name__} ---------------')
 # value.
 # maybe we want to execute the module in certain way if we execute the module direclty. and
 # maybe we dont want to run any code at all when we import some module.
+
+
+#_________________________________________________________________________________________________
+
+# --------------- Running: __main__ ---------------
+
+#       ---------- module1 namespace ----------
+# __name__: __main__
+# __doc__: None
+# __package__: None
+# __loader__: <_frozen_importlib_external.SourceFileLoader object at 0x000002>
+# __spec__: None
+# __annotations__: {}
+# __builtins__: <module 'builtins' (built-in)>
+# __file__: module1.py
+# __cached__: None
+# func: <function func at 0x000001>
+#        -------------------------------------
+
+# --------------- End of: __main__ ----------------

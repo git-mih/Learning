@@ -1,5 +1,3 @@
-# module1.py
-
 print('Running module1.py...')
 
 name = 'Fabio'
