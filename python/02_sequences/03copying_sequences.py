@@ -81,16 +81,51 @@ a = [10, 20]
 b = [a, 30]
 a.append('b')
 
+#___________________________________________________________________________________________________
+# copy module:
 
+# the standard library 'copy' have an generic copy and deepcopy operation.
+# it provides a copy version because isnt every object that can make shallow copy of itself. 
+# for exemple, built-in objects like, lists, sets, dictionaries have the 'copy' method, they 
+# can do it.
 
-# the standard library 'copy' have an generic copy and deepcopy operation. it provides a copy
-# as well because isnt every object that can make shallow copy of itself. for exemple, built-in
-# objects like, lists, sets, dictionaries have the 'copy' method, they can do it.
+import copy
+
+# Shallow copy:
+s = [1, 2, 3]      # [1, 2, 3] 0x1111
+cp = copy.copy(s)  # [1, 2, 3] 0x2222
+
+# Deep copy:
+s = [[[0, 0], [0, 0]], [[0, 0], [0, 0]]] # 0x1111
+cp = copy.deepcopy(s)                    # 0x2222
+
+cp[0][0][0] = 777
+
+s  # [[[0, 0], [0, 0]], [[0, 0], [0, 0]]] 
+cp # [[[777, 0], [0, 0]], [[0, 0], [0, 0]]]
+
 
 # custom classes can implement the __copy__ and __deepcopy__ methods that will allow us to
-# override how shallow and deepcopies are made for our custom objects. 
+# override how shallow and deepcopies are made for our custom objects. but the copy module
+# will now how to make a copy even if we dont explicity specify these attributes in our class:
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def __repr__(self):
+        return f'Point({self.x}, {self.y})'
 
+class Line:
+    def __init__(self, p1, p2):
+        self.p1 = p1
+        self.p2 = p2
+    
+    def __repr__(self):
+        return f'Line({self.p1.__repr__()}, {self.p2.__repr__()})'
 
+p1 = Point(0, 0)
+p2 = Point(0, 0)
 
-
-
+line1 = Line(p1, p2)         # 0x1111
+line2 = copy.deepcopy(line1) # 0x2222
