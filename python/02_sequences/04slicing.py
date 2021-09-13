@@ -60,3 +60,24 @@ range(*slice(0, 100).indices(10)) # range(0, 10)
 
 t = slice(0, 100, 2).indices(10)
 list(range(*t)) # [0, 2, 4, 6, 8]
+
+#__________________________________________________________________________________________________
+# Assignment using slice objects:
+
+# whenever we use slicing [::], Python is looking for any iterable on the RHS:
+# when dealing with slice assignments, 
+
+# delete:
+l = [1, 2, 3, 4, 5]  # 0x111 
+l[2:] = []  # [1, 2]   0x111
+
+l = [1, 2, 3, 4, 5]  # 0x111 
+l[2:] = ''  # [1, 2]   0x111
+
+# insert:
+l = [1, 2, 3, 4, 5]         # 0x111
+l[2:] = [777] # [1, 2, 777]   0x111
+
+l = [1, 2, 3, 4, 5]  # 0x111
+l[0:2] = ['a', 'b']  # 0x111 
+#        ['a', 'b', 3, 4, 5]
