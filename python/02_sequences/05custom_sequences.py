@@ -4,6 +4,9 @@
 # an sequence type, and to create our own sequence type objects, we just require to implement
 # this behaviour.
 
+from typing import Type
+
+
 hasattr(list, '__getitem__') # True
 hasattr(str, '__getitem__')  # True
 
@@ -169,3 +172,133 @@ c = MyClass([1, 2, 3]) # <__main__.MyClass object at 0x001>
 c     # MyClass([1, 2, 3])
 c[1:] # MyClass([2, 3])
 c[1]  # 2
+
+#_______________________________________________________________________________________________________
+# custom mutable sequence type:
+
+# in general, we expect that, whenever we perform a concatenation of two sequence objects, the 
+# result is a new sequence object of the same type. but if we want to mutate an custom sequence 
+# object, we should use in-place concatenation that will mutate the object, and not create a 
+# new one.
+
+class Person:
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return f'MyClass(name={self.name})'
+
+    # concatenation:
+    def __add__(self, other):
+        return Person(self.name + other.name)
+
+    # in-place concatenation:
+    def __iadd__(self, other):
+        if isinstance(other, Person):
+            self.name += other.name
+        else:
+            self.name += other
+        return self
+
+    # repetition concatenation:
+    def __mul__(self, n):
+        return Person(self.name * n)
+    
+    # in-place repetition concatenation:
+    def __imul__(self, n):
+        self.name *= n
+        return self
+
+# concatenation (new object):
+p1 = Person('Fabio')    # MyClass(name=Fabio)    <__main__.Person object at 0x01111>
+p2 = p1 + Person('Giu') # MyClass(name=FabioGiu) <__main__.Person object at 0x02222>
+
+p1 = Person('Fabio')    # MyClass(name=Fabio)      <__main__.Person object at 0x01111>
+p2 = p1 * 2             # MyClass(name=FabioFabio) <__main__.Person object at 0x02222>
+
+
+# in-place concatenation:
+p1 = Person('Fabio')    # MyClass(name=Fabio)    <__main__.Person object at 0x01111>
+p1 += Person('Giu')     # MyClass(name=FabioGiu) <__main__.Person object at 0x01111>
+
+p1 = Person('Fabio')    # MyClass(name=Fabio)      <__main__.Person object at 0x01111>
+p1 *= 2                 # MyClass(name=FabioFabio) <__main__.Person object at 0x01111>
+
+#_______________________________________________________________________________________________________
+import numbers
+
+class Point:
+    def __init__(self, x, y):
+        if isinstance(x, numbers.Real) and isinstance(y, numbers.Real):
+            self._pt = (x, y)
+        else:
+            raise TypeError('Point co-ordinates must be a real number')
+    
+    def __repr__(self):
+        return f'Point(x={self._pt[0]}, y={self._pt[1]})'
+
+    def __len__(self):
+        return len(self._pt)
+    
+    def __getitem__(self, item):
+        return self._pt[item]
+
+
+class Polygon:
+    def __init__(self, *pts):
+        if pts:
+            self._pts = [Point(*pt) for pt in pts]
+        else:
+            self._pts = []
+        
+    def __repr__(self):
+        pts_str = ', '.join([str(pt) for pt in self._pts])
+        return f'Polygon({pts_str})'
+
+    def __len__(self):
+        return len(self._pts)
+
+    def __setitem__(self, key, value):
+        try:
+            rhs = [Point(*pt) for pt in value]
+            is_single = False
+        except TypeError:
+            try:
+                rhs = Point(*value)
+                is_single = True
+            except TypeError:
+                raise TypeError('invalid Point or iterable of Points')
+        if (isinstance(s, int) and is_single)\
+            or isinstance(s, slice) and not is_single:
+            self._pts[s] = rhs
+        else:
+            raise TypeError('incompatible index/slice assignment')
+
+    def __getitem__(self, value):
+        return self._pts[value]
+
+    def append(self, pt):
+        self._pts.append(Point(*pt))
+
+    def insert(self, i, pt):
+        self._pts.insert(i, Point((pt)))
+
+    def extend(self, other):
+        if isinstance(other, Polygon):
+            self._pts += other._pts
+        else:
+            points = [Point(*pt) for pt in other]
+            self._pts += points
+    
+    def pop(self, i):
+        return self._pts.pop(i)
+
+    def __iadd__(self, other):
+        self.extend(other)
+        return self
+    
+    def __delitem__(self, item):
+        del self._pts[item]
+
+
+p = Polygon((0, 0), (1, 1), (2, 2))
