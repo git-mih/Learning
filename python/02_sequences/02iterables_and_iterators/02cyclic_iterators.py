@@ -50,7 +50,6 @@ for e in iter_cyc: print(e, end='') # FABIFABIFABIFABIFABI
 
 # itertools equivalent:
 import itertools
-from typing import final
 
 iter_cyc = itertools.cycle('FABI')
 for _ in range(10): print(next(iter_cyc), end='') # FABIFABIFA
