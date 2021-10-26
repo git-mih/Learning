@@ -223,8 +223,8 @@ for c in city_iter: print(c)
 # London
 
 
-# the drawback now i that, we have to remember to create a new iterator every time.
-# would be nice if we didnt have to do that manually every time, and be ble to iterate over the
+# the drawback now is that, we have to remember to create a new iterator every time.
+# would be nice if we didnt have to do that manually every time, and be able to iterate over the
 # Cities object directly instead of a separated class.
 
 # this is where the formal definition of a Python iterable comes in.
